@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pallette - Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #F4F4F4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+        }
+        .profile-circle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-image: url('https://randomuser.me/api/portraits/men/10.jpg'); /* Replace with your image path */
+            background-size: cover;
+            background-position: center;
+            border: 2px solid #000000;
+            cursor: pointer;
+            display: none; /* Initially hidden */
+        }
+        .logo {
+            margin-top: 20px;
+            width: 200px;
+        }
+        .container {
+            background: #fff0e8;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-top: 20px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px -10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+        .home-container {
+            display: none;
+            text-align: center;
+            width: 80%;
+        }
+        .search-bar {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .art-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .art-card {
+            background: #FFFFFF;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+        }
+        .art-card img {
+            width: 100%;
+            border-radius: 10px;
+        }
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+        }
+        .actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #28A745;
+        }
+        .comment-box, .submit-btn {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+            display: none;
+        }
+        .like-count, .comment-count {
+            font-size: 14px;
+            color: #555;
+            cursor: pointer;
+        }
+        .comment-list {
+            display: none;
+            text-align: left;
+            font-size: 14px;
+            margin-top: 5px;
+            color: #333;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
+        }
+        .create-post-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #007BFF; /* Blue button */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .create-post-btn:hover {
+            background-color: green;
+            width: 150px;
+            justify-content: start;
+            padding-left: 20px;
+        }
+
+        .create-post-btn::after {
+            content: "Create a Post";
+            font-size: 13px;
+            margin-left: 15px;
+            display: none;
+        }
+
+        .create-post-btn:hover::after {
+            display: block;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-circle" id="profileCircle"></div> <!-- Profile Circle hidden initially -->
+    <img src="https://dynamic.design.com/asset/logo/87984d09-3e67-4eb1-a146-2d7def3b181d/logo-search-grid-2x?logoTemplateVersion=1&v=637660542011770000&text=Palette" alt="Pallette Logo" class="logo">
+    <div class="container" id="loginPage">
+        <h2 style="font-size: 40px;">Login to Pallette</h2>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button onclick="login()">Login</button>
+        <button onclick="showSignup()">Create Account</button>
+    </div>
+
+    <div class="home-container" id="homePage">
+        <input type="text" class="search-bar" id="search" placeholder="Search artwork..." oninput="searchArtworks()">
+        <h2>Welcome to Pallette</h2>
+        <div class="art-grid" id="artGrid"></div>
+        <button class="create-post-btn" onclick="navigateToCreatePost()">+</button>
+    </div>
+
+    <script>
+        let users = [];
+        let likes = {};
+        let comments = {};
+        let artworks = [
+            { id: "art1", name: "Sunset", src: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTs2NfDnWtP4d4-dbc_kAgTH3OXZ9c9B09_pEy38WOJmRt3ILjsu0tNIfImDBQ2dWVFInE&usqp=CAU", description: "A beautiful sunset view.", price: "Rs.20,000" },
+            { id: "art2", name: "Mountain", src: "https://samuelearp.com/wp-content/uploads/2019/09/MountainValley-SamuelEarp-oilpainting.jpg", description: "A majestic mountain landscape.", price: "Rs.15,000" },
+            { id: "art3", name: "Cityscape", src: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLMIi9d4dngf7PCF_ylZpYJ-Zr6qZPYZGfbty5CEwuXKb2kVZIzpnPHMg44cO6EIaUV5c&usqp=CAU", description: "A bustling cityscape.", price: "Rs.25,000" },
+            { id: "art4", name: "Forest", src: "https://i.pinimg.com/736x/85/4a/fa/854afa8f4f9dbf60a70124ae2a6c1be4.jpg", description: "A serene forest scene.", price: "Rs.18,000" },
+            { id: "art5", name: "Eye", src: "https://cdn.magicdecor.in/com/2023/02/29204106/image-1686129942-3869.jpg", description: "A striking abstract painting of an eye, blending vibrant shades of blue, orange, and pink with bold, textured brushstrokes.", price: "Rs.13,000" },
+            { id: "art6", name: "Wolf", src: "https://artquid.twic.pics/art/12/124/818421.1995490538.1.o1140134933.jpg", description: "A highly detailed and intense sketch of a wolf’s face, capturing its piercing gaze and fierce expression.", price: "Rs.22,000" },
+            { id: "art7", name: "Shree Ganesh", src: "https://indianartideas.in/images/blog/Avighna-%20Ganesha%20painting.jfif", description: "A vibrant painting of Lord Ganesha, symbolizing wisdom and prosperity with intricate detailing and bold colors", price: "Rs.25,000" }
+        ];
+
+        function login() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            // Sample user for testing
+            const sampleUser  = {
+                email: "test@example.com",
+                password: "password123"
+            };
+
+            // Validate user credentials
+            if (email === sampleUser .email && password === sampleUser .password) {
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("homePage").style.display = "block";
+                document.getElementById("profileCircle").style.display = "block"; // Show profile circle after login
+                renderArtworks(artworks);
+            } else {
+                alert("Invalid email or password. Please try again.");
+            }
+        }
+
+        function renderArtworks(filteredArtworks) {
+            const artGrid = document.getElementById("artGrid");
+            artGrid.innerHTML = filteredArtworks.map(({ id, name, src }) => `
+                <div class='art-card' id='${id}' onclick="viewArtworkDetails('${id}')">
+                    <img src='${src}' alt='${name}'>
+                    <h3>${name}</h3>
+                    <div class='actions'>
+                        <button onclick="event.stopPropagation(); toggleLike('${id}')">👍 Like</button>
+                        <button onclick="event.stopPropagation(); toggleCommentBox('${id}')">💬 Comment</button>
+                        <button onclick="event.stopPropagation(); shareArtwork('${id}')">🔗 Share</button>
+                    </div>
+                    <span class='like-count' id='likeCount-${id}'>0 Likes</span>
+                    <textarea class='comment-box' id='commentBox-${id}' placeholder='Write a comment...'></textarea>
+                    <button class='submit-btn' id='submitBtn-${id}' onclick="event.stopPropagation(); submitComment('${id}')">Submit</button>
+                    <span class='comment-count' id='commentCount-${id}' onclick="event.stopPropagation(); showComments('${id}')">0 Comments</span>
+                    <div class='comment-list' id='commentList-${id}'></div>
+                </div>
+            `).join('');
+        }
+
+        function viewArtworkDetails(id) {
+            const artwork = artworks.find(art => art.id === id);
+            if (artwork) {
+                const artworkDetailsPage = `
+                    <div style="text-align: center; padding: 20px;">
+                        <img src="${artwork.src}" alt="${artwork.name}" style="width: 300px; border-radius: 10px;">
+                        <h2>${artwork.name}</h2>
+                        <p>${artwork.description}</p>
+                        <h3>Price: ${artwork.price}</h3>
+                        <button style="margin: 10px; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Buy Now</button>
+                        <button style="margin: 10px; padding: 10px; background-color: #ffc107; color: white; border: none; border-radius: 5px; cursor: pointer;">Add to Wishlist</button>
+                        <button style="margin: 10px; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;" onclick="login()">Back to Home</button>
+                    </div>
+                `;
+                document.body.innerHTML = artworkDetailsPage;
+            }
+        }
+
+        function toggleLike(id) {
+            if (!likes[id]) likes[id] = 0;
+            likes[id] = likes[id] === 0 ? 1 : 0;
+            document.getElementById(`likeCount-${id}`).innerText = `${likes[id]} Likes`;
+        }
+
+        function toggleCommentBox(id) {
+            document.getElementById(`commentBox-${id}`).style.display = "block";
+            document.getElementById(`submitBtn-${id}`).style.display = "block";
+        }
+
+        function submitComment(id) {
+            const commentBox = document.getElementById(`commentBox-${id}`);
+            if (!comments[id]) comments[id] = [];
+            if (commentBox.value.trim()) {
+                comments[id].push(commentBox.value);
+                document.getElementById(`commentCount-${id}`).innerText = `${comments[id].length} Comments`;
+                commentBox.value = "";
+            }
+        }
+
+        function showComments(id) {
+            const commentList = document.getElementById(`commentList-${id}`);
+            commentList.innerHTML = comments[id] ? comments[id].map(c => `<p>${c}</p>`).join('') : "No comments yet";
+            commentList.style.display = commentList.style.display === "none" ? "block" : "none";
+        }
+
+        function searchArtworks() {
+            const query = document.getElementById("search").value.toLowerCase();
+            const filteredArtworks = artworks.filter(({ name }) => name.toLowerCase().includes(query));
+            renderArtworks(filteredArtworks);
+        }
+
+        function shareArtwork(id) {
+            const url = `${window.location.origin}/#${id}`;
+            navigator.clipboard.writeText(url).then(() => {
+                alert("Artwork link copied to clipboard!");
+            }).catch(err => {
+                console.error("Failed to copy: ", err);
+            });
+        }
+
+        function navigateToCreatePost() {
+            // Here you can navigate to a new page
+            window.location.href = "create-post.html"; // Change the URL to your desired post creation page
+        }
+    </script>
+</body>
+</html>
